@@ -146,6 +146,14 @@ public class CMClientApp {
                     Createfile(clientStub);
                     NextStep(clientStub);
                     break;
+                case "delete file":
+                    DeleteFile(clientStub);
+                    NextStep(clientStub);
+                    break;
+                case "share":
+                    ShareFile(clientStub);
+                    NextStep(clientStub);
+                    break;
                 case "get list":
                     System.out.print(getFilesInClientDirectory(clientStub));
                     NextStep(clientStub);
@@ -154,14 +162,6 @@ public class CMClientApp {
                     ModifyFile(clientStub);
                     NextStep(clientStub);
                     break;
-                    case "delete file":
-                        DeleteFile(clientStub);
-                        NextStep(clientStub);
-                        break;
-                    case "share":
-                        ShareFile(clientStub);
-                        NextStep(clientStub);
-                        break;
                 case "upload":
                     uploadMultipleFiles(clientStub);
                     NextStep(clientStub);
@@ -420,7 +420,8 @@ public class CMClientApp {
                 if(serverFile.contains("_shared")){
                     String message = "모든 "+serverFile + " 파일 삭제바랍니다. "+m_eventHandler.logicalClock;
                     clientStub.chat("/SERVER", message);// 서버에 공유 파일 모두 삭제 메세지 요청
-                    try {// 일단 슬립  logical lock 으로 구현해야함
+                    try {
+                        // Wait for the specified duration
                         Thread.sleep(1500);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -455,7 +456,8 @@ public class CMClientApp {
                     clientStub.chat("/SERVER", message1);
                     clientStub.pushFile(clientFilePath, "SERVER");// 재전송
                     clientStub.chat("/SERVER", "file_send " + m_eventHandler.logicalClock);
-                    try {// 일단 슬립  logical lock 으로 구현해야함
+                    try {
+                        // Wait for the specified duration
                         Thread.sleep(1500);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -482,51 +484,6 @@ public class CMClientApp {
         compareSync(clientStub);
     }
 
-//        List<String> clientFileList = getFilesInClientDirectory(clientStub);
-//        List<String> serverFileList = getFilesInServerDirectory(clientStub);
-//        // 파일 내용 비교 및 업데이트
-//        for (String fileName : clientFileList) {
-//            String clientFilePath = "./client-file-path/" + strUserName + "/" + fileName;
-//            String serverFilePath = "./server-file-path/" + strUserName + "/" + fileName;
-//
-//            String clientFileContent = getFileContent(clientFilePath);
-//            String serverFileContent = getFileContent(serverFilePath);
-//
-//            if (!clientFileContent.equals(serverFileContent)) {// 내용이 다른 경우
-//                if (fileName.contains("_shared")) {  // 공유된 파일이라면 서버 내의 모든 파일 업데이트
-//                    // 여기서부터 ack 메세지 보내서 받아서 하면 됨 서버 큐에 파일이름이 없다면 실행 가수
-////                    if(first==true) {  // 처음에 동기화 가능 요청
-////                        clientStub.chat("/SERVER", fileName + " 파일 동기화 요청");
-////                        first = false; // 서버에 요청을 보내고 처음이 아님으로 바꿈
-////                    }
-////                    if(m_eventHandler.modify_possible= true) { // 공유된 파일이라면 ack를 받은 이후 수정 요청청
-//                        String message1 = fileName + " deleted. " + m_eventHandler.logicalClock;
-//                        clientStub.chat("/SERVER", message1);
-//                        clientStub.pushFile(clientFilePath, "SERVER");// 재전송
-//                        clientStub.chat("/SERVER", "file_send " + m_eventHandler.logicalClock);
-//                        try {// 일단 슬립  logical lock 으로 구현해야함
-//                            Thread.sleep(1500);
-//                        } catch (InterruptedException e) {
-//                            e.printStackTrace();
-//                        }
-//
-//                        String message2 = fileName + " 모두 업데이트 " + m_eventHandler.logicalClock;
-//                        clientStub.chat("/SERVER", message2);
-//                        // 모두 업데이트 메세지가 보내지면 서버의 파일을 모두 업데이트하고 클라이언트로 전송
-////                        m_eventHandler.modify_possible= false;// 수정 이후 수정불가능하게 만들어 놓음 // 이게 바뀌는지 확인 해보자
-////                        first=true;
-////                    }
-//                } else {
-//                    // 내용이 다르다면 파일 삭제 후 재전송
-//                    String message = fileName + " deleted. "+m_eventHandler.logicalClock;
-//                    clientStub.chat("/SERVER", message);
-//
-//                    clientStub.pushFile(clientFilePath, "SERVER");
-//                    clientStub.chat("/SERVER","file_send "+m_eventHandler.logicalClock);
-//                }
-//            }
-//        }
-//    }
     private static String getFileContent(String filePath) {  // 파일 수정을 위해서 파일을 읽어오는 함수
         try {
             byte[] encodedBytes = Files.readAllBytes(Paths.get(filePath));

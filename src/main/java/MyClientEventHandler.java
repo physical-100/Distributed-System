@@ -73,7 +73,7 @@ public class MyClientEventHandler implements CMAppEventHandler {
     private void CprocessDataEvent(CMEvent cme) {
         CMDataEvent de = (CMDataEvent) cme;
         switch (de.getID()) {
-            case CMDataEvent.REMOVE_USER:// 클라이언트의 로그아웃을 표시
+            case CMDataEvent.REMOVE_USER: // 클라이언트의 로그아웃을 표시
                 System.out.println("[" + de.getUserName() + "] logout server\n");
                 break;
             default:
@@ -96,8 +96,7 @@ public class MyClientEventHandler implements CMAppEventHandler {
     }
     private void CprocessDummyEvent(CMEvent cme) {
         CMDummyEvent due = (CMDummyEvent) cme;
-        if(due.getDummyInfo().contains("server")) {
-//            System.out.println("msg: " + due.getDummyInfo());
+        if(due.getDummyInfo().contains("server")) {// 서버에서 파일을 전송 받으면 공유된 파일이므로 파일디렉토리를 옮겨줍니다
             String[] parts = due.getDummyInfo().split("\\s+");
             String filename = parts[0];
             Path clientFilePath = Paths.get("./client-file-path/" + filename);
@@ -128,31 +127,20 @@ public class MyClientEventHandler implements CMAppEventHandler {
                 e.printStackTrace();
                 System.out.println("Failed to share files.");
             }
-            // 이건 현재 클라이언트 경로 내의 파일 리스트 출력
-            Path directoryPath = Paths.get("./client-file-path/" + due.getReceiver());
 
-//            try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(directoryPath)) {
-//                for (Path filePath : directoryStream) {
-//                    if (Files.isRegularFile(filePath)) {
-//                        System.out.println(filePath.getFileName());
-//                    }
-//                }
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-        } else if (due.getDummyInfo().contains("logicalclock_change")){
+        } else if (due.getDummyInfo().contains("logicalclock_change")){ // logical clock change
             String[] parts = due.getDummyInfo().split("\\s+");
             String getInt = parts[0];
             int severLogicalClock = Integer.parseInt(getInt);
             logicalClock=compareLogicalClocks(logicalClock,severLogicalClock);
 
         }
-        else if (due.getDummyInfo().contains("삭제되었습니다.")) { //수정요청을 보냈을때 이미 삭제되고 없는 경우
-            String[] parts = due.getDummyInfo().split("\\s+");
-            String getInt = parts[0];
-            int severLogicalClock = Integer.parseInt(getInt);
-            logicalClock=compareLogicalClocks(logicalClock,severLogicalClock);
-        }
+//        else if (due.getDummyInfo().contains("삭제되었습니다.")) { //수정요청을 보냈을때 이미 삭제되고 없는 경우
+//            String[] parts = due.getDummyInfo().split("\\s+");
+//            String getInt = parts[0];
+//            int severLogicalClock = Integer.parseInt(getInt);
+//            logicalClock=compareLogicalClocks(logicalClock,severLogicalClock);
+//        }
         return;
     }
 
@@ -182,7 +170,7 @@ public class MyClientEventHandler implements CMAppEventHandler {
                 return;
         }
     }
-    private int compareLogicalClocks(int clientLogicalClock, int serverLogicalClock) {// logical clock 비교 해서 더  큰 값 보다 +1 해서 내놓음
+    private int compareLogicalClocks(int clientLogicalClock, int serverLogicalClock) { // logical clock 비교 해서 더  큰 값 보다 +1 해서 내놓음
         if (serverLogicalClock >= clientLogicalClock) {
             return serverLogicalClock+1;
         } else {

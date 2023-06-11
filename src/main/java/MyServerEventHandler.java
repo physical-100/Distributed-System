@@ -15,12 +15,10 @@ import java.nio.file.Path;
 public class MyServerEventHandler implements CMAppEventHandler {
     private CMServerStub m_serverStub;
     private  int server_logicalClock ;
-//    private Queue<String> messageQueue; // 큐 선언
 
     public MyServerEventHandler(CMServerStub serverStub) {
         server_logicalClock=0;
         m_serverStub = serverStub;
-//        messageQueue = new LinkedList<>(); // 큐 초기화
     }
 
     @Override
@@ -67,7 +65,8 @@ public class MyServerEventHandler implements CMAppEventHandler {
                 String logoutdirectoryPath = "./server-file-path/" + se.getUserName();
                 File directory1 = new File(logoutdirectoryPath);
 
-                if (directory1.isDirectory()) {
+                if (directory1.isDirectory()) {// 로그아웃한다면 서버에  공유된 파일은 삭제
+                    //로그인 한 상태에서만 업데이트가 가능하기하다는 가정으로 로그아웃시 삭제됨
                     File[] files = directory1.listFiles();
                     if (files != null) {
                         for (File file : files) {
@@ -77,7 +76,6 @@ public class MyServerEventHandler implements CMAppEventHandler {
                             }
                         }
                     }
-//                    System.out.println("공유된 파일 삭제");
                 }
                 break;
             default:
@@ -93,7 +91,7 @@ public class MyServerEventHandler implements CMAppEventHandler {
             case CMInterestEvent.USER_TALK:
                 System.out.println("<" + ie.getUserName() + ">: " + ie.getTalk());
                 getLogicalClocks(ie.getTalk());
-                if (ie.getTalk().contains("모든")) {  // 공유된 파일 삭제 시  서버의 모든 파일 삭제
+                if (ie.getTalk().contains("모든")) {   // 공유된 파일 삭제 시  서버의 모든 파일 삭제
                     String[] parts = ie.getTalk().split("\\s+");
                     String filename = parts[1];
                     for (String DirName : getDirectoryPathsWithFile("./server-file-path", filename)) {
@@ -105,7 +103,7 @@ public class MyServerEventHandler implements CMAppEventHandler {
                         } else {
                             System.err.println("Failed to delete the file.");
                         }
-                        // 서버에서 삭제 이후 클라이언트에 있는 파일은 동기화에 의해 삭제됨
+                          // 서버에서 삭제 이후 클라이언트에 있는 파일은 동기화에 의해 삭제됨
                     }
                 } else if (ie.getTalk().contains("모두 업데이트")) {// 파일 업데이트 후 클라이언트에게 전송
                     //큐에 넣고 대기해야 하는것 2
@@ -219,17 +217,12 @@ public class MyServerEventHandler implements CMAppEventHandler {
                     }
                 } else if (ie.getTalk().contains("file_send")) {
                     send_dummyevent(server_logicalClock+ " logicalclock_change", ie.getUserName());
+
                 }else if (ie.getTalk().contains("파일 동기화 요청")) {
-                    String[] parts = ie.getTalk().split("\\s+"); // Split the string by whitespace
+                    String[] parts = ie.getTalk().split("\\s+");
                     String filename = parts[0];
-//
-
                         send_dummyevent(server_logicalClock + "동기화 가능", ie.getUserName());
-//                    }else {
-//                        messageQueue.add(ie.getTalk());
-//                    }
                 }
-
                 break;
             default:
                 return;
@@ -256,7 +249,7 @@ public class MyServerEventHandler implements CMAppEventHandler {
             case CMFileEvent.END_FILE_TRANSFER_ACK:
                 if (fe.getReturnCode() == 1) {
                     System.out.print(" transfer success\n");
-                    if (fe.getFileSender().equals("SERVER")) {
+                    if (fe.getFileSender().equals("SERVER")) {// 전송이 끝난후 공유된 파일일때 클라이언트로 메세지 보냄
                         if (fe.getFileName().contains("_shared")) {
                             send_dummyevent(fe.getFileName()+" server file send",fe.getFileReceiver());
                         }
@@ -316,30 +309,6 @@ public class MyServerEventHandler implements CMAppEventHandler {
             }
         }
     }
-//    private void  executemessagequeue(){
-//        while (!messageQueue.isEmpty()){
-//
-//            getMessageFromQueue();
-//
-//
-//
-//        }
-//    }
-//    private boolean queueContainsFilename(String filename) {
-//        for (String element : messageQueue) {
-//            if (element.contains(filename)) {
-//                return true;
-//            }
-//        }
-//        return false;
-//    }
-//    private String getMessageFromQueue() { // 큐의 메세지를 읽어 오는 것
-//        if (!messageQueue.isEmpty()) {
-//            return messageQueue.poll();
-//        } else {
-//            return null;
-//        }
-//    }
 }
 
 

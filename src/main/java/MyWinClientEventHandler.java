@@ -4,7 +4,6 @@ import kr.ac.konkuk.ccslab.cm.info.*;
 import kr.ac.konkuk.ccslab.cm.stub.CMClientStub;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -56,9 +55,9 @@ public class MyWinClientEventHandler implements CMAppEventHandler{
                 printMessage(se.getUserName()+"로그인 했음");
             case CMSessionEvent.LOGIN_ACK:
                 if (se.isValidUser() == 0) {
-                    printMessage("This client fails authentication by the default server!");
+                    printledMessage("This client fails authentication by the default server!","bold");
                 } else if (se.isValidUser() == -1) {
-                    printMessage("This client is already in the login-user list!");
+                    printledMessage("This client is already in the login-user list!","bold");
                 } else {
                     printMessage("This client successfully logs in to the default server.\n");
                 }
@@ -98,7 +97,6 @@ public class MyWinClientEventHandler implements CMAppEventHandler{
             Path clientFilePath = Paths.get("./client-file-path/" + filename);
             Path newDirectoryPath = Paths.get("./client-file-path/" + due.getReceiver());
             Path newFilePath = Paths.get("./client-file-path/" + due.getReceiver() + "/" + filename);
-
             // Create the new directory if it doesn't exist
             try {
                 if (!Files.exists(newDirectoryPath)) {
@@ -106,9 +104,8 @@ public class MyWinClientEventHandler implements CMAppEventHandler{
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-                printMessage("Failed to create the directory.");
+                printledMessage("Failed to create the directory.","bold");
             }
-
             // Move files from clientFilePath to newFilePath
             try {
                 // Check if the file exists
@@ -121,26 +118,13 @@ public class MyWinClientEventHandler implements CMAppEventHandler{
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-                printMessage("Failed to share files.");
+                printledMessage("Failed to share files.","bold");
             }
-            // 이건 현재 클라이언트 경로 내의 파일 리스트 출력
-            Path directoryPath = Paths.get("./client-file-path/" + due.getReceiver());
-
-//            try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(directoryPath)) {
-//                for (Path filePath : directoryStream) {
-//                    if (Files.isRegularFile(filePath)) {
-//                        printMessage(filePath.getFileName());
-//                    }
-//                }
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
         } else if (due.getDummyInfo().contains("logicalclock_change")){
             String[] parts = due.getDummyInfo().split("\\s+");
             String getInt = parts[0];
             int severLogicalClock = Integer.parseInt(getInt);
             logicalClock=compareLogicalClocks(logicalClock,severLogicalClock);
-
         }
         else if (due.getDummyInfo().contains("삭제되었습니다.")) { //수정요청을 보냈을때 이미 삭제되고 없는 경우
             String[] parts = due.getDummyInfo().split("\\s+");
@@ -165,9 +149,9 @@ public class MyWinClientEventHandler implements CMAppEventHandler{
         switch (fe.getID()) {
             case CMFileEvent.REPLY_PERMIT_PULL_FILE:
                 if (fe.getReturnCode() == -1) {
-                    printMessage("[" + fe.getFileName() + "] does not exist in the owner!\n");
+                    printledMessage("[" + fe.getFileName() + "] does not exist in the owner!\n","bold");
                 } else if (fe.getReturnCode() == 0) {
-                    printMessage("[" + fe.getFileSender() + "] rejects to send file(" + fe.getFileName() + ").\n");
+                    printledMessage("[" + fe.getFileSender() + "] rejects to send file(" + fe.getFileName() + ").\n","bold");
                 } else
                     printMessage("[" + fe.getFileSender() + "] send file(" + fe.getFileName() + ").\n");
                 break;
@@ -180,208 +164,24 @@ public class MyWinClientEventHandler implements CMAppEventHandler{
                 if (fe.getReturnCode() == 1) {
                     printMessage("["+fe.getFileName() + "] 송신이 완료 되었습니다.\n");
                 } else if (fe.getReturnCode() == 0) {
-                    printMessage("[" + fe.getFileReceiver() + "] receive fail\n");
+                    printledMessage("[" + fe.getFileReceiver() + "] receive fail\n","bold");
                     break;
                 }
                 return;
         }
     }
-    
 
-//    private void processCONTENT_DOWNLOAD_END(CMSNSEvent se)
-//    {
-//        CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
-//        int nAttachScheme = confInfo.getAttachDownloadScheme();
-//        CMSNSInfo snsInfo = m_clientStub.getCMInfo().getSNSInfo();
-//        CMSNSContentList contentList = snsInfo.getSNSContentList();
-//        Iterator<CMSNSContent> iter = null;
-//        boolean bShowLink = true;
-//
-//        //printMessage("# downloaded contents: "+se.getNumContents());
-//        printMessage("# downloaded contents: "+se.getNumContents()+"\n");
-//        //printMessage("# contents to be printed: "+contentList.getSNSContentNum());
-//        printMessage("# contents to be printed: "+contentList.getSNSContentNum()+"\n");
-//
-//        // writes info to the file
-////        int nRealDelay = (int)(System.currentTimeMillis()-m_lStartTime);
-////        int nAccessDelay = nRealDelay + m_nEstDelaySum;
-////        printMessage("Real download delay: "+nRealDelay+" ms\n");
-////        if(m_pw != null)   // if multiple downloading is requested,
-////        {
-////            m_pw.format("%10d %10d%n", nAccessDelay, se.getNumContents());
-////            m_pw.flush();
-////        }
-//
-//        // print out SNS content that is downloaded
-//        iter = contentList.getContentList().iterator();
-//        while(iter.hasNext())
-//        {
-//            CMSNSContent cont = iter.next();
-//            //printMessage("--------------------------------------");
-//            printMessage("-----------------------------------------------------------\n");
-//            //printMessage("ID("+cont.getContentID()+"), Date("+cont.getDate()+"), Writer("
-//            //      +cont.getWriterName()+"), File("+cont.getAttachedFileName()+")");
-//            printMessage("ID("+cont.getContentID()+"), Date("+cont.getDate()+"), Writer("
-//                    +cont.getWriterName()+"), #attachment("+cont.getNumAttachedFiles()
-//                    +"), replyID("+cont.getReplyOf()+"), lod("+cont.getLevelOfDisclosure()+")\n");
-//            //printMessage("Message: "+cont.getMessage());
-//            printMessage("Message: "+cont.getMessage()+"\n");
-//            if(cont.getNumAttachedFiles() > 0)
-//            {
-//                ArrayList<String> fNameList = cont.getFileNameList();
-//                for(int i = 0; i < fNameList.size(); i++)
-//                {
-//                    String fPath = confInfo.getTransferedFileHome().toString() + File.separator + fNameList.get(i);
-//                    File file = new File(fPath);
-//
-//                    // display images (possibly thumbnails)
-//                    if(nAttachScheme == CMInfo.SNS_ATTACH_FULL || nAttachScheme == CMInfo.SNS_ATTACH_PARTIAL)
-//                    {
-//                        if(CMUtil.isImageFile(fPath))
-//                        {
-//                            printImage(fPath);
-//                        }
-//                    }
-//                    else if(nAttachScheme == CMInfo.SNS_ATTACH_PREFETCH)
-//                    {
-//                        // skip visualization of the prefetched original image
-//                        if(CMUtil.isImageFile(fPath) && fNameList.get(i).contains("-thumbnail."))
-//                        {
-//                            printImage(fPath);
-//                        }
-//                    }
-//
-//                    // determine whether a link will be showed or not
-//                    bShowLink = true;
-//
-//                    if(nAttachScheme == CMInfo.SNS_ATTACH_PARTIAL)
-//                    {
-//                        // if the file is a thumbnail file
-//                        String fName = fNameList.get(i);
-//                        if(fName.contains("-thumbnail."))
-//                        {
-//                            int index = fName.lastIndexOf("-thumbnail.");
-//                            String ext = fName.substring(index+"-thumbnail".length(), fName.length());
-//                            fName = fName.substring(0, index)+ext;
-//                            fPath = confInfo.getTransferedFileHome().toString()+File.separator+fName;
-//                            file = new File(fPath);
-//                        }
-//                    }
-//                    else if(nAttachScheme == CMInfo.SNS_ATTACH_PREFETCH)
-//                    {
-//                        if(CMUtil.isImageFile(fPath))
-//                        {
-//                            String fName = fNameList.get(i);
-//                            if(fName.contains("-thumbnail."))
-//                            {
-//                                int index = fName.lastIndexOf("-thumbnail.");
-//                                String ext = fName.substring(index+"-thumbnail".length(), fName.length());
-//                                fName = fName.substring(0, index)+ext;
-//                                fPath = confInfo.getTransferedFileHome().toString()+File.separator+fName;
-//                                file = new File(fPath);
-//                            }
-//                            else
-//                                bShowLink = false;
-//                        }
-//                    }
-//
-//                    // print the link to a original attachment file
-//                    if(bShowLink)
-//                    {
-//                        if(file.exists())
-//                        {
-//                            printMessage("attachment: ");
-//                        }
-//                        else
-//                        {
-//                            printMessage("attachment not downloaded: ");
-//                        }
-//                        printFilePath(fPath);
-//                    }
-//                }   // for
-//            }   // if
-//        }   // while
-//        //printMessage("sum of estimated download delay: "+m_nEstDelaySum +" ms\n");
-//
-//        // continue simulation until m_nSimNum = 0
-////        if( --m_nSimNum > 0 )
-////        {
-////            // repeat the request of SNS content downloading
-////            m_lStartTime = System.currentTimeMillis();
-////            int nContentOffset = 0;
-////            String strUserName = m_clientStub.getMyself().getName();
-////            String strWriterName = "";
-////
-////            m_clientStub.requestSNSContent(strWriterName, nContentOffset);
-////            if(CMInfo._CM_DEBUG)
-////            {
-////                //printMessage("["+strUserName+"] requests content with offset("+nContentOffset+").");
-////                printMessage("["+strUserName+"] requests content of writer["+strWriterName+"] with offset("
-////                        +nContentOffset+").\n");
-////            }
-////        }
-//        else
-//        {
-//            if(m_fos != null){
-//                try {
-//                    m_fos.close();
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//            if(m_pw != null){
-//                m_pw.close();
-//            }
-//        }
-//
-//        return;
-//    }
-    
-    
+    private void printledMessage(String strText,String style){
+        m_client.printStyledMessage(strText,style);
+    }
     private void printMessage(String strText)
     {
-      /*
-      m_outTextArea.append(strText);
-      m_outTextArea.setCaretPosition(m_outTextArea.getDocument().getLength());
-      */
-      /*
-      StyledDocument doc = m_outTextPane.getStyledDocument();
-      try {
-         doc.insertString(doc.getLength(), strText, null);
-         m_outTextPane.setCaretPosition(m_outTextPane.getDocument().getLength());
-      } catch (BadLocationException e) {
-         e.printStackTrace();
-      }
-      */
         m_client.printMessage(strText);
 
         return;
     }
 
-   /*
-   private void printStyledMessage(String strText, String strStyleName)
-   {
-      m_client.printStyledMessage(strText, strStyleName);
-   }
-   */
 
-    private void printImage(String strPath)
-    {
-        m_client.printImage(strPath);
-    }
-
-    private void printFilePath(String strPath)
-    {
-        m_client.printFilePath(strPath);
-    }
-
-   /*
-   private void setMessage(String strText)
-   {
-      m_outTextArea.setText(strText);
-      m_outTextArea.setCaretPosition(m_outTextArea.getDocument().getLength());
-   }
-   */
    private int compareLogicalClocks(int clientLogicalClock, int serverLogicalClock) {// logical clock 비교 해서 더  큰 값 보다 +1 해서 내놓음
        if (serverLogicalClock >= clientLogicalClock) {
            return serverLogicalClock+1;

@@ -21,8 +21,8 @@ public class MyWinClient extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 	//private JTextArea m_outTextArea;
-	private JTextPane m_outTextPane;
-	private JTextField m_inTextField;
+	private static JTextPane m_outTextPane;
+	private static JTextField m_inTextField;
 	private JButton m_startStopButton;
 	private JButton m_loginLogoutButton;
 	private MyMouseListener cmMouseListener;
@@ -30,7 +30,7 @@ public class MyWinClient extends JFrame {
 	private static MyWinClientEventHandler m_eventHandler;
 	private static String strUserName;
 	private static Timer timer;
-	private JList<String> m_fileList;  // 추가된 부분: 파일 목록을 표시할 JList
+	private JList<String> m_fileList;  // 클라이언트 파일 목록을 표시할 JList
 	private DefaultListModel<String> m_fileListModel;
 
 	MyWinClient()
@@ -96,6 +96,7 @@ public class MyWinClient extends JFrame {
 		// 추가된 부분: 파일 목록 갱신을 위한 타이머 설정
 
 		javax.swing.Timer timer = new javax.swing.Timer(3000, new ActionListener() {
+			// 3초마다 한번씩 클라이언트 파일을 보여줍니다.
 			public void actionPerformed(ActionEvent e) {
 				// 파일 및 디렉토리 업데이트 로직 작성
 				updateFileList();
@@ -108,7 +109,9 @@ public class MyWinClient extends JFrame {
 		m_inTextField.requestFocus();
 	}
 
-	private class FileListSelectionListener implements ListSelectionListener {  //파일 리스트를 클릭 했을 때 이벤트 발생
+	private class FileListSelectionListener implements ListSelectionListener {
+		//파일 리스트를 클릭 했을 때 이벤트 발생
+		//파일 클릭시 파일 내용 출력
 		public void valueChanged(ListSelectionEvent e) {
 			if (!e.getValueIsAdjusting()) {
 				String selectedFile = m_fileList.getSelectedValue();
@@ -119,7 +122,7 @@ public class MyWinClient extends JFrame {
 		}
 	}
 	private void showFileContents(String fileName) {
-		// 파일 내용을 가져와서 표시하는 로직
+		// 파일 내용을 가져와서 표시하는 함수
 		try {
 			String filePath = m_clientStub.getTransferedFileHome() + "/"+strUserName+"/" + fileName;
 			FileReader fileReader = new FileReader(filePath);
@@ -139,7 +142,7 @@ public class MyWinClient extends JFrame {
 		}
 
 	}
-	private void updateFileList() {
+	private void updateFileList() {  // 파일 목록을 가져오는 함수
 		Path serverFilePath = Path.of(m_clientStub.getTransferedFileHome() + "/" + strUserName);
 		if (serverFilePath != null) {
 			File[] files = serverFilePath.toFile().listFiles();
@@ -196,6 +199,7 @@ public class MyWinClient extends JFrame {
 
 		JMenu cmServiceMenu = new JMenu("Services");
 
+		// 파일 전송과 관련된 서비스만 세팅
 		JMenu fileTransferSubMenu = new JMenu("File Transfer");
 
 		JMenuItem currentdirecttorycheckItem = new JMenuItem("current directory check");
@@ -297,6 +301,19 @@ public class MyWinClient extends JFrame {
 
 		return;
 	}
+	private static void printMsg(String strText)
+	{
+		StyledDocument doc = m_outTextPane.getStyledDocument();
+		try {
+			doc.insertString(doc.getLength(), strText, null);
+			m_outTextPane.setCaretPosition(m_outTextPane.getDocument().getLength());
+
+		} catch (BadLocationException e) {
+			e.printStackTrace();
+		}
+
+		return;
+	}
 
 	public void printStyledMessage(String strText, String strStyleName)
 	{
@@ -312,46 +329,13 @@ public class MyWinClient extends JFrame {
 		return;
 	}
 
-	public void printImage(String strPath)
-	{
-		int nTextPaneWidth = m_outTextPane.getWidth();
-		int nImageWidth;
-		int nImageHeight;
-		int nNewWidth;
-		int nNewHeight;
-
-		File f = new File(strPath);
-		if(!f.exists())
-		{
-			printMessage(strPath+"\n");
-			return;
-		}
-
-		ImageIcon icon = new ImageIcon(strPath);
-		Image image = icon.getImage();
-		nImageWidth = image.getWidth(m_outTextPane);
-		nImageHeight = image.getHeight(m_outTextPane);
-
-		if(nImageWidth > nTextPaneWidth/2)
-		{
-			nNewWidth = nTextPaneWidth / 2;
-			float fRate = (float)nNewWidth/(float)nImageWidth;
-			nNewHeight = (int)(nImageHeight * fRate);
-			Image newImage = image.getScaledInstance(nNewWidth, nNewHeight, Image.SCALE_SMOOTH);
-			icon = new ImageIcon(newImage);
-		}
-
-		m_outTextPane.insertIcon ( icon );
-		printMessage("\n");
-	}
-
-	public void printFilePath(String strPath)
-	{
-		JLabel pathLabel = new JLabel(strPath);
-		pathLabel.addMouseListener(cmMouseListener);
-		m_outTextPane.insertComponent(pathLabel);
-		printMessage("\n");
-	}
+//	public void printFilePath(String strPath)
+//	{
+//		JLabel pathLabel = new JLabel(strPath);
+//		pathLabel.addMouseListener(cmMouseListener);
+//		m_outTextPane.insertComponent(pathLabel);
+//		printMessage("\n");
+//	}
 
 	private void processInput(String strInput) throws IOException {
 		switch (strInput) {
@@ -606,75 +590,75 @@ public class MyWinClient extends JFrame {
 		printMessage("======\n");
 	}
 
-	private void testPushFile()
-	{
-		String strFilePath = null;
-		File[] files = null;
-		String strReceiver = null;
-		byte byteFileAppendMode = -1;
-		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
-		boolean bReturn = false;
-
-		printMessage("====== push a file\n");
-
-		/*
-		strReceiver = JOptionPane.showInputDialog("Receiver Name: ");
-		if(strReceiver == null) return;
-		*/
-		JTextField freceiverField = new JTextField();
-		String[] fAppendMode = {"Default", "Overwrite", "Append"};
-		JComboBox<String> fAppendBox = new JComboBox<String>(fAppendMode);
-
-		Object[] message = {
-				"File Receiver(empty for default server): ", freceiverField,
-				"File Append Mode: ", fAppendBox
-				};
-		int option = JOptionPane.showConfirmDialog(null, message, "File Push", JOptionPane.OK_CANCEL_OPTION,JOptionPane.PLAIN_MESSAGE);
-		if(option == JOptionPane.CANCEL_OPTION || option != JOptionPane.OK_OPTION)
-		{
-			printMessage("canceled.\n");
-			return;
-		}
-
-		strReceiver = freceiverField.getText().trim();
-		if(strReceiver.isEmpty())
-			strReceiver = interInfo.getDefaultServerInfo().getServerName();
-
-		switch(fAppendBox.getSelectedIndex())
-		{
-		case 0:
-			byteFileAppendMode = CMInfo.FILE_DEFAULT;
-			break;
-		case 1:
-			byteFileAppendMode = CMInfo.FILE_OVERWRITE;
-			break;
-		case 2:
-			byteFileAppendMode = CMInfo.FILE_APPEND;
-			break;
-		}
-
-		JFileChooser fc = new JFileChooser();
-		fc.setMultiSelectionEnabled(true);
-		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
-		File curDir = new File(confInfo.getTransferedFileHome().toString());
-		fc.setCurrentDirectory(curDir);
-		int fcRet = fc.showOpenDialog(this);
-		if(fcRet != JFileChooser.APPROVE_OPTION) return;
-		files = fc.getSelectedFiles();
-		if(files.length < 1) return;
-		for(int i=0; i < files.length; i++)
-		{
-			strFilePath = files[i].getPath();
-			bReturn = m_clientStub.pushFile(strFilePath, strReceiver, byteFileAppendMode);
-			if(!bReturn)
-			{
-				printMessage("push file error! file("+strFilePath+"), receiver("
-						+strReceiver+")\n");
-			}
-		}
-
-		printMessage("======\n");
-	}
+//	private void testPushFile()
+//	{
+//		String strFilePath = null;
+//		File[] files = null;
+//		String strReceiver = null;
+//		byte byteFileAppendMode = -1;
+//		CMInteractionInfo interInfo = m_clientStub.getCMInfo().getInteractionInfo();
+//		boolean bReturn = false;
+//
+//		printMessage("====== push a file\n");
+//
+//		/*
+//		strReceiver = JOptionPane.showInputDialog("Receiver Name: ");
+//		if(strReceiver == null) return;
+//		*/
+//		JTextField freceiverField = new JTextField();
+//		String[] fAppendMode = {"Default", "Overwrite", "Append"};
+//		JComboBox<String> fAppendBox = new JComboBox<String>(fAppendMode);
+//
+//		Object[] message = {
+//				"File Receiver(empty for default server): ", freceiverField,
+//				"File Append Mode: ", fAppendBox
+//				};
+//		int option = JOptionPane.showConfirmDialog(null, message, "File Push", JOptionPane.OK_CANCEL_OPTION,JOptionPane.PLAIN_MESSAGE);
+//		if(option == JOptionPane.CANCEL_OPTION || option != JOptionPane.OK_OPTION)
+//		{
+//			printMessage("canceled.\n");
+//			return;
+//		}
+//
+//		strReceiver = freceiverField.getText().trim();
+//		if(strReceiver.isEmpty())
+//			strReceiver = interInfo.getDefaultServerInfo().getServerName();
+//
+//		switch(fAppendBox.getSelectedIndex())
+//		{
+//		case 0:
+//			byteFileAppendMode = CMInfo.FILE_DEFAULT;
+//			break;
+//		case 1:
+//			byteFileAppendMode = CMInfo.FILE_OVERWRITE;
+//			break;
+//		case 2:
+//			byteFileAppendMode = CMInfo.FILE_APPEND;
+//			break;
+//		}
+//
+//		JFileChooser fc = new JFileChooser();
+//		fc.setMultiSelectionEnabled(true);
+//		CMConfigurationInfo confInfo = m_clientStub.getCMInfo().getConfigurationInfo();
+//		File curDir = new File(confInfo.getTransferedFileHome().toString());
+//		fc.setCurrentDirectory(curDir);
+//		int fcRet = fc.showOpenDialog(this);
+//		if(fcRet != JFileChooser.APPROVE_OPTION) return;
+//		files = fc.getSelectedFiles();
+//		if(files.length < 1) return;
+//		for(int i=0; i < files.length; i++)
+//		{
+//			strFilePath = files[i].getPath();
+//			bReturn = m_clientStub.pushFile(strFilePath, strReceiver, byteFileAppendMode);
+//			if(!bReturn)
+//			{
+//				printMessage("push file error! file("+strFilePath+"), receiver("
+//						+strReceiver+")\n");
+//			}
+//		}
+//
+//		printMessage("======\n");
+//	}
 
 
 //	private void requestAttachedFile(String strFileName)
@@ -753,14 +737,22 @@ public class MyWinClient extends JFrame {
 	}
 
 	public class MyMenuListener implements ActionListener {
-		public void actionPerformed(ActionEvent e)
+		public void actionPerformed(ActionEvent a)
 		{
-			String strMenu = e.getActionCommand();
+			String strMenu = a.getActionCommand();
 			switch (strMenu) {
 				case "show all menus":
 					printAllMenus();
 					break;
 				case "current directory check":
+					Path clientfile = Path.of(m_clientStub.getTransferedFileHome() + "/" + strUserName);
+
+					Desktop desktop = Desktop.getDesktop();
+					try {
+						desktop.open(clientfile.toFile());
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 					printMessage(getFilesInClientDirectory(m_clientStub).toString());
 					printMessage("\n");
 					break;
@@ -845,12 +837,6 @@ public class MyWinClient extends JFrame {
 		}
 
 	}
-
-//	private void printThreadInfo() {
-//		String threadInfo = m_clientStub.getThreadInfo();
-//		printMessage(threadInfo);
-//	}
-
 
 	public  void uploadMultipleFiles(CMClientStub clientStub) {
 	String[] strFiles = null;
@@ -1057,6 +1043,7 @@ public class MyWinClient extends JFrame {
 
 			if(strFileName.contains("_shared")){
 				printStyledMessage("File name cannot contain '_shared'. Please enter a different file name.","bold");
+				ShareFile(m_clientStub);
 			}
 			else{
 				// Create the directory if it doesn't exist
@@ -1103,6 +1090,7 @@ public class MyWinClient extends JFrame {
 
 			if (!clientFileList.contains(strFileName)) {
 				printStyledMessage("그런 파일이 없습니다.\n","bold");
+				ModifyFile(m_clientStub);
 			}
 			else{
 				FileWriter fileWriter = new FileWriter("./client-file-path/"+strUserName+"/"+strFileName);
@@ -1156,7 +1144,7 @@ private static List<String> getFilesInClientDirectory(CMClientStub clientStub) {
 					File file = new File("./client-file-path/"+strUserName+"/"+clientFile);
 					boolean isDeleted = file.delete();
 					if (isDeleted) {
-						System.out.println(clientFile + " File deleted successfully.");
+						printMsg(clientFile + " File deleted successfully.");
 					}
 				}
 
@@ -1164,6 +1152,7 @@ private static List<String> getFilesInClientDirectory(CMClientStub clientStub) {
 					String filePath = "./client-file-path/" + strUserName + "/" + clientFile;
 					clientStub.pushFile(filePath, "SERVER");
 					clientStub.chat("/SERVER","file_send "+m_eventHandler.logicalClock);
+					printMsg(clientFile+"파일을 서버로 보냈습니다.");
 					try {
 						// Wait for the specified duration
 						Thread.sleep(1500);
@@ -1194,6 +1183,9 @@ private static List<String> getFilesInClientDirectory(CMClientStub clientStub) {
 					String message = serverFile + " deleted. "+m_eventHandler.logicalClock;
 					clientStub.chat("/SERVER", message);// 서버에 삭제 메세지 요청
 
+					printMsg(serverFile+"파일이 삭제되었습니다.");
+
+
 					try {
 						Thread.sleep(1500);
 					} catch (InterruptedException e) {
@@ -1204,8 +1196,6 @@ private static List<String> getFilesInClientDirectory(CMClientStub clientStub) {
 		}
 	}
 
-
-	// 서버 접근 말고 뭘로 바꾸지...
 	private static  void compareSync(CMClientStub clientStub) {
 		List<String> clientFileList = getFilesInClientDirectory(clientStub);
 		// 파일 내용 비교 및 업데이트

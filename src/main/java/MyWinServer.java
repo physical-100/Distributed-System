@@ -29,10 +29,11 @@ public class MyWinServer extends JFrame {
 	private JList<String> m_fileList;  // 추가된 부분: 파일 목록을 표시할 JList
 
 	private DefaultListModel<String> m_fileListModel;
+	private String userName;
 
 	MyWinServer()
 	{
-		
+		userName=null;
 		MyKeyListener cmKeyListener = new MyKeyListener();
 		MyActionListener cmActionListener = new MyActionListener();
 		setTitle("My Server");
@@ -84,6 +85,7 @@ public class MyWinServer extends JFrame {
 
 			Timer timer = new Timer(1000, new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
+					updateFileList(userName);
 					// 파일 및 디렉토리 업데이트 로직 작성
 				}
 			});
@@ -170,7 +172,7 @@ public class MyWinServer extends JFrame {
 		printMessage("===========================\n");
 		printMessage("open server file path folder\n");
 		// ask client name
-		String userName = JOptionPane.showInputDialog("User Name:");
+		userName = JOptionPane.showInputDialog("User Name:");
 		if(userName != null) {
 			// get the file-sync home of "userName"
 			Path serverfile = Path.of(m_serverStub.getTransferedFileHome() + "/" + userName);
@@ -227,7 +229,7 @@ public class MyWinServer extends JFrame {
 		int option = JOptionPane.showConfirmDialog(null, msg, "Server Information", JOptionPane.OK_CANCEL_OPTION,JOptionPane.PLAIN_MESSAGE);
 
 		// update the server info if the user would like to do
-		if (option == JOptionPane.OK_OPTION) 
+		if (option == JOptionPane.OK_OPTION)
 		{
 			String strNewServerAddress = serverAddressTextField.getText().toString();
 			int nNewServerPort = Integer.parseInt(serverPortTextField.getText());
@@ -288,32 +290,6 @@ public class MyWinServer extends JFrame {
 		
 		return;
 	}
-
-//	public void printImage(String strPath)
-//	{
-//		int nTextPaneWidth = m_outTextPane.getWidth();
-//		int nImageWidth;
-//		int nImageHeight;
-//		int nNewWidth;
-//		int nNewHeight;
-//		ImageIcon icon = new ImageIcon(strPath);
-//		Image image = icon.getImage();
-//		nImageWidth = image.getWidth(m_outTextPane);
-//		nImageHeight = image.getHeight(m_outTextPane);
-//
-//		if(nImageWidth > nTextPaneWidth/2)
-//		{
-//			nNewWidth = nTextPaneWidth / 2;
-//			float fRate = (float)nNewWidth/(float)nImageWidth;
-//			nNewHeight = (int)(nImageHeight * fRate);
-//			Image newImage = image.getScaledInstance(nNewWidth, nNewHeight, java.awt.Image.SCALE_SMOOTH);
-//			icon = new ImageIcon(newImage);
-//		}
-//
-//		m_outTextPane.insertIcon ( icon );
-//		printMessage("\n");
-//	}
-
 
 	public class MyKeyListener implements KeyListener {
 		public void keyPressed(KeyEvent e)
