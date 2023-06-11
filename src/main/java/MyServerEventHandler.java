@@ -106,7 +106,6 @@ public class MyServerEventHandler implements CMAppEventHandler {
                           // 서버에서 삭제 이후 클라이언트에 있는 파일은 동기화에 의해 삭제됨
                     }
                 } else if (ie.getTalk().contains("모두 업데이트")) {// 파일 업데이트 후 클라이언트에게 전송
-                    //큐에 넣고 대기해야 하는것 2
                         String[] parts = ie.getTalk().split("\\s+");
                         String filename = parts[0];
                         if (!getDirectoryPathsWithFile("./server-file-path", filename).isEmpty()) {
@@ -154,8 +153,7 @@ public class MyServerEventHandler implements CMAppEventHandler {
 
                     if ((filename.contains("_shared"))) { //이미 공유되었던 이름이라면 변경하지 않고 클라이언트로 전송해줌
 
-                        //큐에 넣고 대기 해야 하는 것
-//                        messageQueue.add("<" + ie.getUserName() + ">: " + ie.getTalk()); // 예시 메시지, 필요에 따라 변경
+
                         m_serverStub.pushFile("./server-file-path/" + ie.getUserName() + "/" + filename, username);
                         send_dummyevent(server_logicalClock+ " logicalclock_change",username);
                         // push와 동시에 username 디렉토리 생성 후 파일 복사 해옴
