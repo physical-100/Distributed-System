@@ -329,13 +329,7 @@ public class MyWinClient extends JFrame {
 		return;
 	}
 
-//	public void printFilePath(String strPath)
-//	{
-//		JLabel pathLabel = new JLabel(strPath);
-//		pathLabel.addMouseListener(cmMouseListener);
-//		m_outTextPane.insertComponent(pathLabel);
-//		printMessage("\n");
-//	}
+//
 
 	private void processInput(String strInput) throws IOException {
 		switch (strInput) {
@@ -1173,7 +1167,7 @@ private static List<String> getFilesInClientDirectory(CMClientStub clientStub) {
 				if(serverFile.contains("_shared")){
 					String message = "모든 "+serverFile + " 파일 삭제바랍니다. "+m_eventHandler.logicalClock;
 					clientStub.chat("/SERVER", message);// 서버에 공유 파일 모두 삭제 메세지 요청
-					try {// 일단 슬립  logical lock 으로 구현해야함
+					try {
 						Thread.sleep(1500);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
@@ -1212,7 +1206,7 @@ private static List<String> getFilesInClientDirectory(CMClientStub clientStub) {
 					clientStub.chat("/SERVER", message1);
 					clientStub.pushFile(clientFilePath, "SERVER");// 재전송
 					clientStub.chat("/SERVER", "file_send " + m_eventHandler.logicalClock);
-					try {// 일단 슬립  logical lock 으로 구현해야함
+					try {
 						Thread.sleep(1500);
 					} catch (InterruptedException e) {
 						e.printStackTrace();

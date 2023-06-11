@@ -224,8 +224,6 @@ public class MyWinServerEventHandler implements CMAppEventHandler {
 				}else if (ie.getTalk().contains("파일 동기화 요청")) {
 					String[] parts = ie.getTalk().split("\\s+"); // Split the string by whitespace
 					String filename = parts[0];
-//
-
 					send_dummyevent(server_logicalClock + "동기화 가능", ie.getUserName());
 //                    }else {
 //                        messageQueue.add(ie.getTalk());
