@@ -1,120 +1,73 @@
+
 import kr.ac.konkuk.ccslab.cm.stub.CMServerStub;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.file.Paths;
+
 
 public class CMServerApp {
-
     private CMServerStub m_serverStub;
-    private CMServerEventHandler m_eventHandler;
+    private MyServerEventHandler m_eventHandler;
 
 
     public CMServerApp() {
         m_serverStub = new CMServerStub();
-        m_eventHandler = new CMServerEventHandler(m_serverStub);
+        m_eventHandler = new MyServerEventHandler(m_serverStub);
 
     }
     public CMServerStub getServerStub() {
         return m_serverStub;
     }
-    public CMServerEventHandler getServerEventHandler()
+    public MyServerEventHandler getServerEventHandler()
     {
         return m_eventHandler;
     }
-//    public void setFilePath()
-//    {
-//        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-//        System.out.println("====== set file path");
-//        String strPath = null;
-//        System.out.print("file path: ");
-//        try {
-//            strPath = br.readLine();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//
-//        m_serverStub.setTransferedFileHome(Paths.get(strPath));
-//
-//        System.out.println("======");
-//    } //기본 디렉토리 다시 설정
 
-//    public void requestFile()
-//    {
-//        boolean bReturn = false;
-//        String strFileName = null;
-//        String strFileOwner = null;
-//        String strFileAppend = null;
-//        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-//        System.out.println("====== request a file");
-//        try {
-//            System.out.print("File name: ");
-//            strFileName = br.readLine();
-//            System.out.print("File owner(user name): ");
-//            strFileOwner = br.readLine();
-//            System.out.print("File append mode('y'(append);'n'(overwrite);''(empty for the default configuration): ");
-//            strFileAppend = br.readLine();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//
-//        if(strFileAppend.isEmpty())
-//            bReturn = m_serverStub.requestFile(strFileName, strFileOwner);
-//        else if(strFileAppend.equals("y"))
-//            bReturn = m_serverStub.requestFile(strFileName,  strFileOwner, CMInfo.FILE_APPEND);
-//        else if(strFileAppend.equals("n"))
-//            bReturn = m_serverStub.requestFile(strFileName,  strFileOwner, CMInfo.FILE_OVERWRITE);
-//        else
-//            System.err.println("wrong input for the file append mode!");
-//
-//        if(!bReturn)
-//            System.err.println("Request file error! file("+strFileName+"), owner("+strFileOwner+").");
-//
-//        System.out.println("======");
-//    } server의 requestfile
+    private static void printFilesInServerDirectory(CMServerStub serverStub) {
+        File directory = new File("./server-file-path");
+        if (directory.exists() && directory.isDirectory()) {
+            File[] files = directory.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    if (file.isFile()) {
+                        System.out.println("File: " + file.getName());
+                    } else if (file.isDirectory()) {
+                        System.out.println("Directory: " + file.getName());
+                    }
+                }
+            }
+        }
+    }
 
-//    public void pushFile()
-//    {
-//        boolean bReturn = false;
-//        String strFilePath = null;
-//        String strReceiver = null;
-//        String strFileAppend = null;
-//        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-//        System.out.println("====== push a file");
-//
-//        try {
-//            System.out.print("File path name: ");
-//            strFilePath = br.readLine();
-//            System.out.print("File receiver (user name): ");
-//            strReceiver = br.readLine();
-//            System.out.print("File append mode('y'(append);'n'(overwrite);''(empty for the default configuration): ");
-//            strFileAppend = br.readLine();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//
-//        if(strFileAppend.isEmpty())
-//            bReturn = m_serverStub.pushFile(strFilePath, strReceiver);
-//        else if(strFileAppend.equals("y"))
-//            bReturn = m_serverStub.pushFile(strFilePath,  strReceiver, CMInfo.FILE_APPEND);
-//        else if(strFileAppend.equals("n"))
-//            bReturn = m_serverStub.pushFile(strFilePath,  strReceiver, CMInfo.FILE_OVERWRITE);
-//        else
-//            System.err.println("wrong input for the file append mode!");
-//
-//        if(!bReturn)
-//            System.err.println("Push file error! file("+strFilePath+"), receiver("+strReceiver+")");
-//
-//        System.out.println("======");
-//    }    서버의 pushfile
+    public static void NextStep(CMServerStub serverStub) {
+        String nextstep = null;
+        System.out.println("다음 실행 명령어를 입력하세요");
+        BufferedReader next = new BufferedReader(new InputStreamReader(System.in));
+        try {
+            nextstep = next.readLine();
+            switch (nextstep) {
+                case "get file":
+                    printFilesInServerDirectory(serverStub);
+                    NextStep(serverStub);
+                    break;
+                default:
+                    NextStep(serverStub);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public static void main(String[] args) {
         CMServerApp server = new CMServerApp();
         CMServerStub serverStub = server.getServerStub();
         serverStub.setAppEventHandler(server.getServerEventHandler());
         serverStub.startCM();
+        NextStep(serverStub);
+        }
 
     }
 
-}
+
