@@ -122,6 +122,7 @@ public class MyServerEventHandler implements CMAppEventHandler {
                                     try {
                                         Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
                                         System.out.println("File move successfully.");
+                                        send_dummyevent(server_logicalClock + " lock sync",extractedString);
                                         m_serverStub.pushFile("./server-file-path/" + extractedString + "/" + filename, extractedString);
                                         send_dummyevent(server_logicalClock + " logicalclock_change", extractedString);
                                     } catch (IOException e) {

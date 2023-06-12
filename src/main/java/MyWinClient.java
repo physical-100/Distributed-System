@@ -16,6 +16,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.*;
 import java.util.Timer;
+import java.util.Random;
 
 public class MyWinClient extends JFrame {
 
@@ -29,12 +30,17 @@ public class MyWinClient extends JFrame {
 	private CMClientStub m_clientStub;
 	private static MyWinClientEventHandler m_eventHandler;
 	private static String strUserName;
+	public String strFileContent ;
 	private static Timer timer;
 	private JList<String> m_fileList;  // 클라이언트 파일 목록을 표시할 JList
 	private DefaultListModel<String> m_fileListModel;
+	public  static int ack;
 
 	MyWinClient()
 	{
+
+		ack = 0;
+		strFileContent=null;
 		strUserName=null;
 		MyKeyListener cmKeyListener = new MyKeyListener();
 		MyActionListener cmActionListener = new MyActionListener();
@@ -1000,6 +1006,15 @@ public class MyWinClient extends JFrame {
 			else if (fileName.contains("_shared")){
 				message1 = "모든 "+ fileName + " 파일 삭제바랍니다. "+m_eventHandler.logicalClock;
 				clientStub.chat("/SERVER", message1);
+				printMessage("파일 삭제 진행중");
+				File file = new File("./client-file-path/"+ fileName);
+				//client-file-path 내의 디렉토리 내부의 파일이 아닌 서버에서 클라이언트로 전송했을때 client-file-path 디렉토리 내의 파일 삭제
+				boolean isDeleted = file.delete();
+				if (isDeleted) {
+					System.out.println("File deleted successfully.\n");
+				} else {
+					printStyledMessage("Failed to delete the file.\n","bold");
+				}
 				// 서버에 공유 파일 모두 삭제 메세지 요청 요청후 서버의 모든 공유 파일이 사라지면 파일 동기화에 의해 클라이언트의 파일도 삭제된다.
 				try {
 					Thread.sleep(1500);
@@ -1067,7 +1082,7 @@ public class MyWinClient extends JFrame {
 	private  void ModifyFile(CMClientStub clientStub) throws IOException {
 		List<String> clientFileList = getFilesInClientDirectory(clientStub);
 		String strFileName = null;
-		String strFileContent = null;
+//		String strFileContent = null;
 		printMessage("====== modify a file\n");
 
 		JTextField FileNameField = new JTextField();
@@ -1083,10 +1098,32 @@ public class MyWinClient extends JFrame {
 			strFileContent= ContentField.getText();
 
 			if (!clientFileList.contains(strFileName)) {
-				printStyledMessage("그런 파일이 없습니다.\n","bold");
+				printStyledMessage("그런 파일이 없습니다.\n", "bold");
 				ModifyFile(m_clientStub);
-			}
-			else{
+//			} else if (strFileName.contains("_shared")) {
+////				clientStub.chat("/SERVER",strFileName+" 파일_수정_요청"+m_eventHandler.logicalClock);
+//
+//				//공유된 파일이라면 수정하기전에 ack 메세지를 받아야함
+//				FileWriter fileWriter = new FileWriter("./client-file-path/"+strUserName+"/"+strFileName);
+//				fileWriter.write(strFileContent);
+//				fileWriter.close();
+//				printMessage("File modified successfully.\n");
+//				// 공유된 파일이라면 서버 내의 모든 파일 업데이트
+//
+//				String message1 = strFileName + " deleted. " + m_eventHandler.logicalClock;
+//				clientStub.chat("/SERVER", message1);
+//
+//				clientStub.pushFile("./client-file-path/"+strUserName+"/"+strFileName, "SERVER");// 재전송
+//				clientStub.chat("/SERVER", "file_send " + m_eventHandler.logicalClock);
+//					try {
+//						Thread.sleep(1500);
+//					} catch (InterruptedException e) {
+//						e.printStackTrace();
+//					}
+//
+//					String message2 = strFileName + " 모두 업데이트 " + m_eventHandler.logicalClock;
+//					clientStub.chat("/SERVER", message2);
+			} else{
 				FileWriter fileWriter = new FileWriter("./client-file-path/"+strUserName+"/"+strFileName);
 				fileWriter.write(strFileContent);
 				fileWriter.close();
@@ -1214,6 +1251,7 @@ private static List<String> getFilesInClientDirectory(CMClientStub clientStub) {
 
 					String message2 = fileName + " 모두 업데이트 " + m_eventHandler.logicalClock;
 					clientStub.chat("/SERVER", message2);
+//					m_eventHandler.ack=1;
 				} else {
 					// 내용이 다르다면 파일 삭제 후 재전송
 					String message = fileName + " deleted. "+m_eventHandler.logicalClock;
@@ -1225,12 +1263,14 @@ private static List<String> getFilesInClientDirectory(CMClientStub clientStub) {
 			}
 		}
 	}
-	private  static void synchronizeFilesWithServer(CMClientStub clientStub) { // 동기화 함수
-		updateSync(clientStub);
-		// 서버에만 존재하는 파일을 서버에 삭제 요청하기
-		deleteSync(clientStub);
+	public  static void synchronizeFilesWithServer(CMClientStub clientStub) { // 동기화 함수
 
-		compareSync(clientStub);
+			updateSync(clientStub);
+			// 서버에만 존재하는 파일을 서버에 삭제 요청하기
+			deleteSync(clientStub);
+			if (ack==0) { // 파일이 수정중인지 확인하는 ack
+				compareSync(clientStub);
+		}
 	}
 	private  static String getFileContent(String filePath) {  // 파일 수정을 위해서 파일을 읽어오는 함수
 		try {
@@ -1246,17 +1286,21 @@ private static List<String> getFilesInClientDirectory(CMClientStub clientStub) {
 
 	public static void main(String[] args) {
 		MyWinClient client = new MyWinClient();
-		CMClientStub cmStub = client.getClientStub();
-		cmStub.setAppEventHandler(client.getClientEventHandler());
+		CMClientStub ClientStub = client.getClientStub();
+		ClientStub.setAppEventHandler(client.getClientEventHandler());
+		Random random = new Random();
+		int randomNumber = random.nextInt(8 - 5 + 1) + 5;
 		timer = new Timer();
 		TimerTask task = new TimerTask() {
-			@Override
-			public void run() {
-				synchronizeFilesWithServer(cmStub);
-			}
-		};
-		//15초마다 실행
-		timer.schedule(task, 5000, 15000);
+				@Override
+				public void run() {
+					if(ack==0){
+					synchronizeFilesWithServer(ClientStub);
+				}
+				}
+			};
+			//10초마다 실행
+			timer.schedule(task, randomNumber*1000, randomNumber*1000);
 	}
 
 }

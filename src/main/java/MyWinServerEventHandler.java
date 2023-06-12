@@ -118,6 +118,7 @@ public class MyWinServerEventHandler implements CMAppEventHandler {
 							String extractedString = DirName.substring(DirName.lastIndexOf("/") + 1);
 							printMessage(extractedString+"\n");
 							if (!extractedString.equals(ie.getUserName())) {
+								send_dummyevent(server_logicalClock + " lock sync",extractedString);
 								String sourcePath = "./server-file-path/" + ie.getUserName() + "/" + filename;
 								String destinationPath = "./server-file-path/" + extractedString + "/" + filename;
 
@@ -158,8 +159,6 @@ public class MyWinServerEventHandler implements CMAppEventHandler {
 
 					if ((filename.contains("_shared"))) { //이미 공유되었던 이름이라면 변경하지 않고 클라이언트로 전송해줌
 
-						//큐에 넣고 대기 해야 하는 것
-//                        messageQueue.add("<" + ie.getUserName() + ">: " + ie.getTalk()); // 예시 메시지, 필요에 따라 변경
 						m_serverStub.pushFile("./server-file-path/" + ie.getUserName() + "/" + filename, username);
 						send_dummyevent(server_logicalClock+ " logicalclock_change",username);
 						// push와 동시에 username 디렉토리 생성 후 파일 복사 해옴
@@ -252,15 +251,15 @@ public class MyWinServerEventHandler implements CMAppEventHandler {
 				break;
 			case CMFileEvent.END_FILE_TRANSFER:
 				printMessage(fe.getFileName() + " 파일 수신이 완료되었습니다.\n");
+
 				break;
 			case CMFileEvent.END_FILE_TRANSFER_ACK:
 				if (fe.getReturnCode() == 1) {
 					System.out.print(" transfer success\n");
-					if (fe.getFileSender().equals("SERVER")) {
 						if (fe.getFileName().contains("_shared")) {
 							send_dummyevent(fe.getFileName()+" server file send",fe.getFileReceiver());
 						}
-					}
+
 				} else if (fe.getReturnCode() == 0) {
 					System.err.print("[" + fe.getFileReceiver() + "] receive fail\n");
 					break;
@@ -273,6 +272,7 @@ public class MyWinServerEventHandler implements CMAppEventHandler {
 		CMDummyEvent due = new CMDummyEvent();
 		due.setDummyInfo(msg);
 		m_serverStub.send(due, reciever);
+		printMessage("더미 이벤트를 보냈습니다");
 		due = null;
 	}
 	private void getLogicalClocks(String getString) {

@@ -3,11 +3,14 @@ import kr.ac.konkuk.ccslab.cm.event.handler.CMAppEventHandler;
 import kr.ac.konkuk.ccslab.cm.info.*;
 import kr.ac.konkuk.ccslab.cm.stub.CMClientStub;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.Files;
+import java.util.TimerTask;
 
 public class MyWinClientEventHandler implements CMAppEventHandler{
     //private JTextArea m_outTextArea;
@@ -37,7 +40,11 @@ public class MyWinClientEventHandler implements CMAppEventHandler{
                 CprocessDataEvent(cme);
                 break;
             case CMInfo.CM_DUMMY_EVENT:
-                CprocessDummyEvent(cme);
+                try {
+                    CprocessDummyEvent(cme);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
                 break;
             case CMInfo.CM_FILE_EVENT:
                 CprocessFileEvent(cme);
@@ -88,10 +95,10 @@ public class MyWinClientEventHandler implements CMAppEventHandler{
     }
 
 
-    private void CprocessDummyEvent(CMEvent cme) {
+    private void CprocessDummyEvent(CMEvent cme) throws IOException {
         CMDummyEvent due = (CMDummyEvent) cme;
         if(due.getDummyInfo().contains("server")) {
-//            printMessage("msg: " + due.getDummyInfo());
+            printMessage("msg: " + due.getDummyInfo());
             String[] parts = due.getDummyInfo().split("\\s+");
             String filename = parts[0];
             Path clientFilePath = Paths.get("./client-file-path/" + filename);
@@ -110,27 +117,56 @@ public class MyWinClientEventHandler implements CMAppEventHandler{
             try {
                 // Check if the file exists
                 if (Files.exists(clientFilePath)) {
-                    Files.move(clientFilePath, newFilePath, StandardCopyOption.REPLACE_EXISTING);
+                    // 공유된 클라이언트가 2개 이상일때 서버에서 클라이언트마다 보내도 하나의 경로로 도달하게 된다. 그래서 파일 전송완료 이후 클라이언트 내에서 파일을 해당 디렉토리로 옮긴다.
+                    Files.copy(clientFilePath, newFilePath, StandardCopyOption.REPLACE_EXISTING);
+                    printMessage("파일이 수정되었습니다.");
                 } else {
                     // Create the file
                     Files.createFile(clientFilePath);
-                    Files.move(clientFilePath, newFilePath, StandardCopyOption.REPLACE_EXISTING);
+                    System.out.println("파일을 만들었습니다.");
+                    Files.copy(clientFilePath, newFilePath, StandardCopyOption.REPLACE_EXISTING);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
                 printledMessage("Failed to share files.","bold");
             }
+//            System.out.println(ack);
+            m_client.ack = 0;
         } else if (due.getDummyInfo().contains("logicalclock_change")){
             String[] parts = due.getDummyInfo().split("\\s+");
             String getInt = parts[0];
             int severLogicalClock = Integer.parseInt(getInt);
             logicalClock=compareLogicalClocks(logicalClock,severLogicalClock);
         }
-        else if (due.getDummyInfo().contains("삭제되었습니다.")) { //수정요청을 보냈을때 이미 삭제되고 없는 경우
+        else if (due.getDummyInfo().contains("삭제되었습니다.")) {  //수정요청을 보냈을때 이미 삭제되고 없는 경우
             String[] parts = due.getDummyInfo().split("\\s+");
             String getInt = parts[0];
             int severLogicalClock = Integer.parseInt(getInt);
             logicalClock=compareLogicalClocks(logicalClock,severLogicalClock);
+        }
+        else if (due.getDummyInfo().contains("파일 수정 불가능")) {  //수정 요청에 대한 ack를 받지 못한 경우
+            String[] parts = due.getDummyInfo().split("\\s+");
+            String getInt = parts[0];
+            int severLogicalClock = Integer.parseInt(getInt);
+            logicalClock=compareLogicalClocks(logicalClock,severLogicalClock);
+            m_client.strFileContent=null;
+        }else if (due.getDummyInfo().contains("lock sync")) { // 파일 전송완료후 ack가  변경될때까지 lock 한다.
+            System.out.println(due.getDummyInfo());
+                m_client.ack =1;
+        }
+
+        else if (due.getDummyInfo().contains("파일 수정 가능")) {  //수정요청을 보냈을때 이미 삭제되고 없는 경우
+            String[] parts = due.getDummyInfo().split("\\s+");
+            String getInt = parts[0];
+            String filename = parts[1];
+            int severLogicalClock = Integer.parseInt(getInt);
+            logicalClock=compareLogicalClocks(logicalClock,severLogicalClock);
+
+            FileWriter fileWriter = new FileWriter("./client-file-path/"+due.getReceiver()+"/"+filename);
+            fileWriter.write(m_client.strFileContent);
+            fileWriter.close();
+            printMessage(filename+"File modified successfully.\n");
+            m_client.strFileContent=null;
         }
         return;
     }
