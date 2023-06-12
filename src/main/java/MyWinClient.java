@@ -34,6 +34,7 @@ public class MyWinClient extends JFrame {
 	private static Timer timer;
 	private JList<String> m_fileList;  // 클라이언트 파일 목록을 표시할 JList
 	private DefaultListModel<String> m_fileListModel;
+	private JLabel fileListLabel;
 	public  static int ack;
 
 	MyWinClient()
@@ -96,8 +97,12 @@ public class MyWinClient extends JFrame {
 		m_fileListModel = new DefaultListModel<>();
 		m_fileList = new JList<>(m_fileListModel);
 		JScrollPane fileListScrollPane = new JScrollPane(m_fileList);
-		m_fileList.addListSelectionListener(new FileListSelectionListener());
-		add(fileListScrollPane, BorderLayout.EAST);
+
+		JPanel fileListPanel = new JPanel(new BorderLayout());
+		fileListLabel = new JLabel("현재 클라이언트: 파일 목록");
+		fileListPanel.add(fileListLabel, BorderLayout.NORTH);
+		fileListPanel.add(fileListScrollPane, BorderLayout.CENTER);
+		add(fileListPanel, BorderLayout.EAST);
 
 		// 추가된 부분: 파일 목록 갱신을 위한 타이머 설정
 
@@ -478,6 +483,7 @@ public class MyWinClient extends JFrame {
 			{
 				printMessage("successfully sent the login request.\n");
 				setButtonsAccordingToClientState();
+				fileListLabel.setText("현재 클라이언트: "+strUserName+" 파일 목록");
 			}
 			else
 			{
