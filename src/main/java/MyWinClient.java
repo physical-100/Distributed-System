@@ -1006,7 +1006,7 @@ public class MyWinClient extends JFrame {
 			else if (fileName.contains("_shared")){
 				message1 = "모든 "+ fileName + " 파일 삭제바랍니다. "+m_eventHandler.logicalClock;
 				clientStub.chat("/SERVER", message1);
-				printMessage("파일 삭제 진행중");
+				printMessage("파일 삭제 진행중\n");
 				File file = new File("./client-file-path/"+ fileName);
 				//client-file-path 내의 디렉토리 내부의 파일이 아닌 서버에서 클라이언트로 전송했을때 client-file-path 디렉토리 내의 파일 삭제
 				boolean isDeleted = file.delete();

@@ -98,7 +98,7 @@ public class MyWinClientEventHandler implements CMAppEventHandler{
     private void CprocessDummyEvent(CMEvent cme) throws IOException {
         CMDummyEvent due = (CMDummyEvent) cme;
         if(due.getDummyInfo().contains("server")) {
-            printMessage("msg: " + due.getDummyInfo());
+//            printMessage("msg: " + due.getDummyInfo());
             String[] parts = due.getDummyInfo().split("\\s+");
             String filename = parts[0];
             Path clientFilePath = Paths.get("./client-file-path/" + filename);
@@ -117,9 +117,10 @@ public class MyWinClientEventHandler implements CMAppEventHandler{
             try {
                 // Check if the file exists
                 if (Files.exists(clientFilePath)) {
-                    // 공유된 클라이언트가 2개 이상일때 서버에서 클라이언트마다 보내도 하나의 경로로 도달하게 된다. 그래서 파일 전송완료 이후 클라이언트 내에서 파일을 해당 디렉토리로 옮긴다.
+                    // 공유된 클라이언트가 3개 이상일때 서버에서 클라이언트마다 보내도 하나의 경로로 도달하게 된다.
+                    // 그래서 파일 전송완료 이후 클라이언트 내에서 파일을 해당 디렉토리로 옮긴다.(move 말고, copy 사용 ) move 사용시 하나의 클라이언트 수정시 파일이 사라져 빈값을 가진 파일이 만들어짐
                     Files.copy(clientFilePath, newFilePath, StandardCopyOption.REPLACE_EXISTING);
-                    printMessage("파일이 수정되었습니다.");
+//                    printMessage("파일이 수정되었습니다.");
                 } else {
                     // Create the file
                     Files.createFile(clientFilePath);

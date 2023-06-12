@@ -257,7 +257,7 @@ public class MyWinServerEventHandler implements CMAppEventHandler {
 				if (fe.getReturnCode() == 1) {
 					System.out.print(" transfer success\n");
 						if (fe.getFileName().contains("_shared")) {
-							send_dummyevent(fe.getFileName()+" server file send",fe.getFileReceiver());
+							send_dummyevent(fe.getFileName()+" server file send\n",fe.getFileReceiver());
 						}
 
 				} else if (fe.getReturnCode() == 0) {
