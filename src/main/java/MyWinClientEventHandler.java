@@ -129,7 +129,7 @@ public class MyWinClientEventHandler implements CMAppEventHandler{
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-                printledMessage("Failed to share files.","bold");
+                printledMessage("Failed to share files.\n","bold");
             }
 //            System.out.println(ack);
             m_client.ack = 0;

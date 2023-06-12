@@ -1257,7 +1257,6 @@ private static List<String> getFilesInClientDirectory(CMClientStub clientStub) {
 
 					String message2 = fileName + " 모두 업데이트 " + m_eventHandler.logicalClock;
 					clientStub.chat("/SERVER", message2);
-//					m_eventHandler.ack=1;
 				} else {
 					// 내용이 다르다면 파일 삭제 후 재전송
 					String message = fileName + " deleted. "+m_eventHandler.logicalClock;
