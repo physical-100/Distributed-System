@@ -3,14 +3,13 @@ import kr.ac.konkuk.ccslab.cm.event.handler.CMAppEventHandler;
 import kr.ac.konkuk.ccslab.cm.info.*;
 import kr.ac.konkuk.ccslab.cm.stub.CMClientStub;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.Files;
-import java.util.TimerTask;
 
 public class MyWinClientEventHandler implements CMAppEventHandler{
     //private JTextArea m_outTextArea;
@@ -155,7 +154,6 @@ public class MyWinClientEventHandler implements CMAppEventHandler{
             System.out.println(due.getDummyInfo());
                 m_client.ack =1;
         }
-
         else if (due.getDummyInfo().contains("파일 수정 가능")) {  //수정요청을 보냈을때 이미 삭제되고 없는 경우
             String[] parts = due.getDummyInfo().split("\\s+");
             String getInt = parts[0];

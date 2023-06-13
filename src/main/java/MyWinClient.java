@@ -102,6 +102,8 @@ public class MyWinClient extends JFrame {
 		fileListLabel = new JLabel("현재 클라이언트: 파일 목록");
 		fileListPanel.add(fileListLabel, BorderLayout.NORTH);
 		fileListPanel.add(fileListScrollPane, BorderLayout.CENTER);
+		// 파일 클릭시 콘텐츠 출현
+		m_fileList.addListSelectionListener(new FileListSelectionListener());
 		add(fileListPanel, BorderLayout.EAST);
 
 		// 추가된 부분: 파일 목록 갱신을 위한 타이머 설정
@@ -1245,6 +1247,11 @@ private static List<String> getFilesInClientDirectory(CMClientStub clientStub) {
 
 			if (!clientFileContent.equals(serverFileContent)) {// 내용이 다른 경우
 				if (fileName.contains("_shared")) {  // 공유된 파일이라면 서버 내의 모든 파일 업데이트
+					//copy로 인해서 남아있던  파일  수정시 삭제
+					File file = new File("./client-file-path/"+fileName);
+					boolean isDeleted = file.delete();
+					if (isDeleted) {
+					}
 					String message1 = fileName + " deleted. " + m_eventHandler.logicalClock;
 					clientStub.chat("/SERVER", message1);
 					clientStub.pushFile(clientFilePath, "SERVER");// 재전송
@@ -1269,7 +1276,6 @@ private static List<String> getFilesInClientDirectory(CMClientStub clientStub) {
 		}
 	}
 	public  static void synchronizeFilesWithServer(CMClientStub clientStub) { // 동기화 함수
-
 			updateSync(clientStub);
 			// 서버에만 존재하는 파일을 서버에 삭제 요청하기
 			deleteSync(clientStub);
